@@ -6,6 +6,9 @@
 namespace lazybot;
 
 use Goutte\Client;
+use GuzzleHttp\Stream\Stream;
+use Symfony\Component\BrowserKit\Response;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -38,6 +41,13 @@ class Addic7edCommand extends Command
     /**
      * Command configuration
      */
+
+    /**
+     * @var Client $client
+     */
+    protected $client;
+
+
     protected function configure()
     {
         $this->setName('subtitle:addic7ed');
@@ -45,7 +55,7 @@ class Addic7edCommand extends Command
 
         $this->addOption('input', 'i', InputOption::VALUE_REQUIRED, 'Input file');
         $this->addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
-        $this->addOption('language', 'l', InputOption::VALUE_REQUIRED, '', 'french"');
+        $this->addOption('language', 'l', InputOption::VALUE_REQUIRED, '', 'french');
     }
 
     /**
@@ -56,7 +66,7 @@ class Addic7edCommand extends Command
     {
         $this->inputFile = $input->getOption("input");
         $this->path      = $input->getOption("path");
-        $this->language  = $input->getOption("language");
+        $this->language  = ucfirst($input->getOption("language"));
     }
 
     /**
@@ -67,8 +77,15 @@ class Addic7edCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln("Hello");
-        $this->getDatas();
-        dump($this->results);
+        try {
+            $this->getDatas();
+            $link     = $this->results[$this->language][0]["links"][0];
+            $subtitle = $this->download($link);
+            $this->writeFile($subtitle, $output);
+
+        } catch (Exception $e) {
+            $output->writeln('<error>'.$e->getMessage().'</error>');
+        }
 
         return null;
 
@@ -83,15 +100,54 @@ class Addic7edCommand extends Command
         $link        = "http://www.addic7ed.com/search.php?search=%s&Submit=Search";
         $requestLink = sprintf($link, $this->inputFile);
 
-        $client = new Client();
+        $this->client = new Client();
+        $this->client->followRedirects(true);
+
+        $this->connect();
         /** @var crawler $crawler */
-        $crawler = $client->request('GET', $requestLink);
+        $crawler = $this->client->request('GET', $requestLink);
 
         $crawler->filter('div#container95m td.language')->each(
             function ($language) {
                 $this->parseLanguage($language);
             }
         );
+
+    }
+
+    /**
+     * @return bool
+     */
+    protected function connect()
+    {
+
+        $url     = "http://www.addic7ed.com/dologin.php";
+        $crawler = $this->client->request(
+            'POST',
+            $url,
+            array('username' => 'lazybot', 'password' => 'azerty', 'remember' => true)
+        );
+
+        if ($this->checkConnection($crawler) !== true) {
+            throw new Exception('Connection failed (check username/password');
+        };
+
+    }
+
+    /**
+     * Check if client is connected
+     *
+     * @param $crawler
+     * @return bool
+     */
+    protected function checkConnection($crawler)
+    {
+        $text = $crawler->filter('#hBar a.button')->first()->text();
+        if ($text == "Signup") {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -142,9 +198,42 @@ class Addic7edCommand extends Command
     {
         return $language->nextAll()->nextAll()->filter('a.buttonDownload')->each(
             function ($link) {
-                return $link->link()->getUri();
+                return $link->link();
             }
         );
+    }
+
+    /**
+     * @param $link
+     * @return string
+     */
+    protected function download($link)
+    {
+        /** @var Response $response */
+        /** @var Stream $stream */
+
+        $this->client->click($link);
+        $response = $this->client->getResponse();
+        $stream   = $response->getContent();
+        $subtitle = $stream->getContents();
+
+        return $subtitle;
+
+
+    }
+
+    /**
+     * @param $subtitle
+     */
+    protected function writeFile($subtitle, OutputInterface $output)
+    {
+        $output->writeln('Generating file');
+        if (file_put_contents($this->path.'/'.$this->inputFile.'.srt', $subtitle)) {
+            $output->writeln(sprintf('<info>File %s save with success</info>', $this->path.'/'.$this->inputFile.'.srt'));
+        } else {
+            throw new Exception('Error during file saving');
+        }
+
     }
 
 
