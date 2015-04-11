@@ -54,12 +54,12 @@ class Addic7edCommand extends Command
         $this->setDescription('check subtitles on Addic7ed');
 
         $this->addOption('input', 'i', InputOption::VALUE_REQUIRED, 'Input file');
-        $this->addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
+        $this->addOption('path', 'p', InputOption::VALUE_REQUIRED, '');
         $this->addOption('language', 'l', InputOption::VALUE_REQUIRED, '', 'french');
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
