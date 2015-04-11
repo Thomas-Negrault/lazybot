@@ -4,6 +4,7 @@ require __DIR__.'/vendor/autoload.php';
 
 use lazybot\Addic7edCommand;
 use Symfony\Component\Console\Application;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 $command = new Addic7edCommand();
 

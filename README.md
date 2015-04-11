@@ -18,3 +18,9 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
 ``` 
 ./lazybot subtitle:addic7ed -i Show.S01.E01.mkv -p /path/to/output/subtitle 
 ```
+
+##Tests:
+
+```
+./vendor/bin/phpunit
+```

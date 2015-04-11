@@ -9,12 +9,16 @@ use Goutte\Client;
 use GuzzleHttp\Stream\Stream;
 use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\Yaml\Yaml;
 
 class Addic7edCommand extends Command
 {
@@ -70,14 +74,30 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return null
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln("Hello");
+        $configLoader = new FileLocator(__DIR__.'/../../app/config');
+        $config = Yaml::parse($configLoader->locate('parameters.yml'));
+
         try {
+            $this->checkInput();
+            $output->writeln(
+                sprintf(
+                    "Checking subtitles for file <comment>%s</comment>\nOutput directory: <comment>%s</comment>",
+                    $this->inputFile,
+                    $this->path
+                )
+            );
+            $config = new FileResource('config/config.yml');
+
+            dump($config->getResource('countries'));
+            dump($config->serialize());
+            dump($config->getResource('parameters'));
+            die;
             $this->getDatas();
             $link     = $this->results[$this->language][0]["links"][0];
             $subtitle = $this->download($link);
@@ -229,11 +249,38 @@ class Addic7edCommand extends Command
     {
         $output->writeln('Generating file');
         if (file_put_contents($this->path.'/'.$this->inputFile.'.srt', $subtitle)) {
-            $output->writeln(sprintf('<info>File %s save with success</info>', $this->path.'/'.$this->inputFile.'.srt'));
+            $output->writeln(
+                sprintf('<info>File %s save with success</info>', $this->path.'/'.$this->inputFile.'.srt')
+            );
         } else {
             throw new Exception('Error during file saving');
         }
 
+    }
+
+    protected function checkInput()
+    {
+        $realpath = realpath($this->inputFile);
+
+        if ($realpath === false) {
+            throw new Exception("File doesn't exist");
+        }
+
+        if ($this->path === null) {
+            $this->path = $realpath;
+        } elseif (!is_dir($this->path)) {
+            throw new Exception("Output directory doesn't exist or it's not a directory");
+        }
+
+
+    }
+
+    protected function verifyFile()
+    {
+
+        if (realpath($this->inputFile) === false) {
+            throw new Exception('Fichier non existant');
+        }
     }
 
 

@@ -1,0 +1,19 @@
+services:
+    symfony.application:
+        class: Symfony\Component\Console\Application
+        arguments: { name: Lazybot, version: 0.0.1 }
+        calls:
+            - [add, ['@Lazybot.Addic7edCommand']]
+
+    Lazybot.Addic7edCommand:
+        class: lazybot\Addic7edCommand
+        arguments: [@symfony.container, %countries%]
+    symfony.container:
+        class: Symfony\Component\DependencyInjection\Container
+    symfony.filesystem:
+        class: Symfony\Component\Filesystem\Filesystem
+    symfony.console_logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments: ['@symfony.console_output']
+    symfony.console_output:
+        class: Symfony\Component\Console\Output\ConsoleOutput
