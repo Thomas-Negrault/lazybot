@@ -1,0 +1,57 @@
+parameters:
+    countries:
+         Albanian:
+         Arabic:
+         Armenian:
+         Azerbaijani:
+         Bengali:
+         Bosnian:
+         Bulgarian:
+         Català:
+         Chinese (Simplified):
+         Chinese (Traditional):
+         Croatian:
+         Czech:
+         Danish:
+         Dutch:
+         English:
+         Estonian:
+         Euskera:
+         Finnish:
+         French : fr
+         French (Canadian):
+         Galego:
+         German:
+         Greek:
+         Hebrew:
+         Hindi:
+         Hungarian:
+         Icelandic:
+         Indonesian:
+         Italian:
+         Japanese:
+         Korean:
+         Latvian:
+         Lithuanian:
+         Macedonian:
+         Malay:
+         Norwegian:
+         Persian:
+         Polish:
+         Portuguese:
+         Portuguese (Brazilian):
+         Romanian:
+         Russian:
+         Serbian (Cyrillic):
+         Serbian (Latin):
+         Slovak:
+         Slovenian:
+         Spanish:
+         Spanish (Latin America):
+         Spanish (Spain):
+         Swedish:
+         Tamil:
+         Thai:
+         Turkish:
+         Ukrainian:
+         Vietnamese:
