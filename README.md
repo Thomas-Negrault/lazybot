@@ -10,7 +10,11 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
     - curl -sS https://getcomposer.org/installer | php
     - mv composer.phar /usr/local/bin/composer
 - Install requirements
+    - sudo apt-get install php5-dev php-pear libcurl3-openssl-dev
+    - sudo pecl install inotify
+    - Add the extension to your *CLI* php.ini `extension=inotify.so;` (/etc/php5/cli/php.ini)
     - cd lazybot
+    - composer update
     - composer install
 
 ##Utilisation

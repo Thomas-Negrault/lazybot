@@ -3,11 +3,11 @@
 require __DIR__.'/vendor/autoload.php';
 
 use lazybot\Addic7edCommand;
+use lazybot\LazyBotMonitoringCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-$command = new Addic7edCommand();
-
 $application = new Application('LazyBot', '0.0.1');
-$application->add($command);
+$application->add(new Addic7edCommand());
+$application->add(new LazyBotMonitoringCommand());
 $application->run();

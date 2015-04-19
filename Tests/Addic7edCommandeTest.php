@@ -16,7 +16,5 @@ class Addic7edCommandeTest extends \PHPUnit_Framework_TestCase
         $commandTester = new CommandTester($command);
         $commandTester->execute(array('command' => $command->getName()));
         $this->assertEquals(1, 1);
-
-
     }
 }

@@ -22,36 +22,29 @@ use Symfony\Component\Yaml\Yaml;
 
 class Addic7edCommand extends Command
 {
-    /**
-     * @var string $inputFile
-     */
+    /** @var string $inputFile */
+
     protected $inputFile;
 
-    /**
-     * @var string $path
-     */
+    /** @var string $path */
+
     protected $path;
 
-    /**
-     * @var string $language
-     */
+    /** @var string $language */
     protected $language;
 
-    /**
-     * @var
-     */
+    /** @var array $results */
     protected $results;
+
+    /** @var int $frequency */
+    protected $frequency = 30;
+
+    /** @var Client $client */
+    protected $client;
 
     /**
      * Command configuration
      */
-
-    /**
-     * @var Client $client
-     */
-    protected $client;
-
-
     protected function configure()
     {
         $this->setName('subtitle:addic7ed');
@@ -63,7 +56,7 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
@@ -74,14 +67,14 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      * @return null
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $configLoader = new FileLocator(__DIR__.'/../../app/config');
-        $config = Yaml::parse($configLoader->locate('parameters.yml'));
+//        $configLoader = new FileLocator(__DIR__.'/../../app/config');
+//        $config = Yaml::parse($configLoader->locate('parameters.yml'));
 
         try {
             $this->checkInput();
@@ -92,16 +85,9 @@ class Addic7edCommand extends Command
                     $this->path
                 )
             );
-            $config = new FileResource('config/config.yml');
 
-            dump($config->getResource('countries'));
-            dump($config->serialize());
-            dump($config->getResource('parameters'));
-            die;
             $this->getDatas();
-            $link     = $this->results[$this->language][0]["links"][0];
-            $subtitle = $this->download($link);
-            $this->writeFile($subtitle, $output);
+            $this->handleResults($output);
 
         } catch (Exception $e) {
             $output->writeln('<error>'.$e->getMessage().'</error>');
@@ -109,6 +95,19 @@ class Addic7edCommand extends Command
 
         return null;
 
+    }
+
+    protected function handleResults(OutputInterface $output)
+    {
+        $subtitles = $this->results[$this->language];
+
+        foreach($subtitles as $subtitle){
+            dump($subtitle["progress"]);
+        }
+die;
+
+//        $subtitle = $this->download($link);
+//        $this->writeFile($subtitle, $output);
     }
 
     /**
@@ -261,27 +260,31 @@ class Addic7edCommand extends Command
     protected function checkInput()
     {
         $realpath = realpath($this->inputFile);
+        $this->inputFile = basename($realpath);
 
         if ($realpath === false) {
             throw new Exception("File doesn't exist");
         }
 
         if ($this->path === null) {
-            $this->path = $realpath;
+            $this->path = dirname($realpath);
         } elseif (!is_dir($this->path)) {
             throw new Exception("Output directory doesn't exist or it's not a directory");
         }
-
 
     }
 
     protected function verifyFile()
     {
-
         if (realpath($this->inputFile) === false) {
             throw new Exception('Fichier non existant');
         }
     }
 
+    protected function wait(int $minutes)
+    {
+        $sec = $minutes * 60;
+        sleep($sec);
+    }
 
 }
