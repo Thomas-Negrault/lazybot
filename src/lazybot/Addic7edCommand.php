@@ -10,9 +10,8 @@ use GuzzleHttp\Stream\Stream;
 use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,6 +41,12 @@ class Addic7edCommand extends Command
     /** @var Client $client */
     protected $client;
 
+    /** @var bool */
+    protected $finish = false;
+
+    /** @var bool */
+    protected $highestPercent = 0;
+
     /**
      * Command configuration
      */
@@ -56,7 +61,7 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
@@ -67,28 +72,39 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return null
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-//        $configLoader = new FileLocator(__DIR__.'/../../app/config');
-//        $config = Yaml::parse($configLoader->locate('parameters.yml'));
+        $configLoader = new FileLocator(__DIR__.'/../../app/config');
+        $config       = Yaml::parse($configLoader->locate('parameters.yml'));
 
         try {
             $this->checkInput();
             $output->writeln(
                 sprintf(
-                    "Checking subtitles for file <comment>%s</comment>\nOutput directory: <comment>%s</comment>",
+                    "Checking subtitles for file <info>%s</info> for <info>%s</info> language\nOutput directory: <info>%s</info>",
                     $this->inputFile,
+                    $this->language,
                     $this->path
                 )
             );
-
-            $this->getDatas();
-            $this->handleResults($output);
-
+            do {
+                $output->writeln(
+                    sprintf("\n<comment>%s</comment>\t Frequency: %d minute(s)", date("d-m-Y H:i"), $this->frequency)
+                );
+                if ($this->getDatas()) {
+                    $this->handleResults($output);
+                }
+                if ($this->finish == true) {
+                    break;
+                } else {
+                    $output->writeln(sprintf("Progress: <error>%d</error>%%\nWaiting %d minute(s)...", $this->highestPercent, $this->frequency));
+                    $this->wait($this->frequency, $output);
+                }
+            } while ($this->finish == false);
         } catch (Exception $e) {
             $output->writeln('<error>'.$e->getMessage().'</error>');
         }
@@ -99,19 +115,29 @@ class Addic7edCommand extends Command
 
     protected function handleResults(OutputInterface $output)
     {
-        $subtitles = $this->results[$this->language];
+        $subtitles   = $this->results[$this->language];
+        $countryCode = 'fr'; //@todo read from config
 
-        foreach($subtitles as $subtitle){
-            dump($subtitle["progress"]);
+        foreach ($subtitles as $index => $subtitle) {
+            $progress = $subtitle["progress"];
+            if ($progress > $this->highestPercent) {
+                $this->highestPercent = $progress;
+            }
+
+            if ($progress == 100) {
+                $file           = $this->download($subtitle['links'][0]);
+                $outputFilename = $this->generateOutputFilename($index, $countryCode);
+
+                $this->writeFile($file, $outputFilename, $output);
+            } elseif ($progress > 85) {
+                $this->frequency = 5;
+            }
         }
-die;
 
-//        $subtitle = $this->download($link);
-//        $this->writeFile($subtitle, $output);
     }
 
     /**
-     * Generate result array
+     * @return bool
      */
     protected function getDatas()
     {
@@ -125,12 +151,17 @@ die;
         $this->connect();
         /** @var crawler $crawler */
         $crawler = $this->client->request('GET', $requestLink);
+        if ($this->client->getHistory()->current()->getUri() == $requestLink) {
+            return false;
+        } else {
+            $crawler->filter('div#container95m td.language')->each(
+                function ($language) {
+                    $this->parseLanguage($language);
+                }
+            );
 
-        $crawler->filter('div#container95m td.language')->each(
-            function ($language) {
-                $this->parseLanguage($language);
-            }
-        );
+            return true;
+        }
 
     }
 
@@ -156,7 +187,7 @@ die;
     /**
      * Check if client is connected
      *
-     * @param $crawler
+     * @param  Crawler $crawler
      * @return bool
      */
     protected function checkConnection($crawler)
@@ -243,14 +274,18 @@ die;
 
     /**
      * @param $subtitle
+     * @param $fileName
+     * @param OutputInterface $output
      */
-    protected function writeFile($subtitle, OutputInterface $output)
+    protected function writeFile($subtitle, $fileName, OutputInterface $output)
     {
         $output->writeln('Generating file');
-        if (file_put_contents($this->path.'/'.$this->inputFile.'.srt', $subtitle)) {
+        if (file_put_contents($this->path.'/'.$fileName, $subtitle)) {
             $output->writeln(
-                sprintf('<info>File %s save with success</info>', $this->path.'/'.$this->inputFile.'.srt')
+                sprintf('<info>File %s save with success</info>', $this->path.'/'.$fileName)
             );
+
+            $this->finish = true;
         } else {
             throw new Exception('Error during file saving');
         }
@@ -259,7 +294,7 @@ die;
 
     protected function checkInput()
     {
-        $realpath = realpath($this->inputFile);
+        $realpath        = realpath($this->inputFile);
         $this->inputFile = basename($realpath);
 
         if ($realpath === false) {
@@ -281,10 +316,33 @@ die;
         }
     }
 
-    protected function wait(int $minutes)
+    protected function wait($minutes, $output)
     {
-        $sec = $minutes * 60;
-        sleep($sec);
+        $progress = new ProgressBar($output, $minutes);
+
+        for($i = 0; $i<$minutes; $i++ ){
+            sleep(60);
+            $progress->advance();
+        }
+
     }
 
+
+    protected function generateOutputFilename($index = 0, $countryCode = '')
+    {
+        $regex  = '/^(.*)\.([a-zA-Z0-9]{0,4})$/';
+        $suffix = '';
+        if ($index != 0) {
+            $suffix[] = $index;
+        }
+        if ($countryCode != '') {
+            $suffix[] = $countryCode;
+        }
+        $suffix[] = 'srt';
+
+        $replacement = '${1}'.'.'.implode('.', $suffix);
+
+        return preg_replace($regex, $replacement, $this->inputFile);
+
+    }
 }
