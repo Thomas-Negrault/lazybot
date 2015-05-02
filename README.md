@@ -17,6 +17,31 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
     - composer update
     - composer install
 
+- Install optionals packages:
+    - [MKVToolNix]([https://www.bunkus.org/videotools/mkvtoolnix/downloads.html):
+        - wget -q -O - https://www.bunkus.org/gpg-pub-moritzbunkus.txt | sudo apt-key add -
+	Add the appropriate lines to your /etc/apt/sources.list:
+		- Ubuntu
+			- 15.04 "Vivid Vervet"
+				  - deb http://www.bunkus.org/ubuntu/vivid/ ./
+				  - deb-src http://www.bunkus.org/ubuntu/vivid/ ./
+			- 14.10 "Utopic Unicorn"
+				- deb http://www.bunkus.org/ubuntu/utopic/ ./
+				- deb-src http://www.bunkus.org/ubuntu/utopic/ ./
+			- 14.04 "Trusty Tahr"
+				- deb http://www.bunkus.org/ubuntu/trusty/ ./
+				- deb-src http://www.bunkus.org/ubuntu/trusty/ ./
+		- Debian
+			- Debian 7 wheezy
+				        - deb http://www.bunkus.org/debian/wheezy/ ./
+				        - deb-src http://www.bunkus.org/debian/wheezy/ ./
+			- Debian 8 (aka »jessie«)
+				        - deb http://www.bunkus.org/debian/jessie/ ./
+				        - deb-src http://www.bunkus.org/debian/jessie/ ./
+        - sudo apt-get update && sudo apt-get install mkvtoolnix
+
+
+
 ##Utilisation
 
 ``` 
