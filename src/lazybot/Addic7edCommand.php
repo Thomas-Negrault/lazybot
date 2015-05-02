@@ -312,7 +312,7 @@ class Addic7edCommand extends Command
     protected function verifyFile()
     {
         if (realpath($this->inputFile) === false) {
-            throw new Exception('Fichier non existant');
+            throw new Exception("Fichier doesn't exist");
         }
     }
 
