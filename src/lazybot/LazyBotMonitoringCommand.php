@@ -67,14 +67,15 @@ class LazyBotMonitoringCommand extends Command
         $download_dir = $this->folder;
         $output->writeln(sprintf("Starting monitoring folder <info>%s</info>", $this->folder));
 
+        $allowedExtensions = array('mkv', 'mp4', 'avi'); //@todo move it to config
         $fd               = inotify_init();
         $watch_descriptor = inotify_add_watch($fd, $download_dir, IN_CREATE);
         $fileInfo         = finfo_open(FILEINFO_MIME_TYPE);
         while (1) {
             $events  = inotify_read($fd);
             $newFile = realpath($this->folder.'/'.$events[0]['name']);
-            $mime    = finfo_file($fileInfo, $newFile);
-            if (preg_match('/video\/.*/', $mime)) {
+            $extension = pathinfo($newFile)["extension"];
+            if (in_array($extension, $allowedExtensions)) {
                 $output->writeln(
                     sprintf("New file:  <info>%s</info>\nStarting searching for subtitle...", $events[0]['name'])
                 );
@@ -84,9 +85,9 @@ class LazyBotMonitoringCommand extends Command
                 $process->run(
                     function ($type, $buffer) {
                         if ('err' === $type) {
-                            echo 'ERR > '.$buffer;
+                            echo ("\nERROR >$buffer");
                         } else {
-                            echo 'OUT > '.$buffer;
+                            echo "\n>".$buffer;
                         }
                     }
                 );
