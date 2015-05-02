@@ -17,6 +17,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
 class Addic7edCommand extends Command
@@ -61,7 +62,7 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
@@ -72,7 +73,7 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      * @return null
      */
@@ -111,6 +112,35 @@ class Addic7edCommand extends Command
 
         return null;
 
+    }
+
+    protected function notify($filename)
+    {
+        $configLoader     = new FileLocator(__DIR__.'/../../app/config');
+        $pushBulletConfig = Yaml::parse($configLoader->locate('userConfig.yml'))["pushbullet"];
+
+        if ($pushBulletConfig["enable"] == true) {
+
+            $pushContent = '{"type": "note", "title": "Subtitle: '.$this->inputFile.'", "body": "Path: '.$filename.'"}';
+            $curl        = curl_init();
+            curl_setopt($curl, CURLOPT_URL, $pushBulletConfig["url"]);
+            curl_setopt($curl, CURLOPT_USERPWD, $pushBulletConfig["key"]);
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt(
+                $curl,
+                CURLOPT_HTTPHEADER,
+                array(
+                    'Content-Type: application/json',
+                    'Content-Length: '.strlen($pushContent)
+                )
+            );
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $pushContent);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_exec($curl);
+            curl_close($curl);
+
+        }
     }
 
     protected function handleResults(OutputInterface $output)
@@ -273,17 +303,20 @@ class Addic7edCommand extends Command
     }
 
     /**
-     * @param $subtitle
-     * @param $fileName
+     * @param                 $subtitle
+     * @param                 $fileName
      * @param OutputInterface $output
      */
     protected function writeFile($subtitle, $fileName, OutputInterface $output)
     {
         $output->writeln('Generating file');
-        if (file_put_contents($this->path.'/'.$fileName, $subtitle)) {
+        $outputFile = $this->path.'/'.$fileName;
+        if (file_put_contents($outputFile, $subtitle)) {
             $output->writeln(
-                sprintf('<info>File %s save with success</info>', $this->path.'/'.$fileName)
+                sprintf('<info>File %s save with success</info>', $outputFile )
             );
+            $this->notify($outputFile);
+
 
             $this->finish = true;
         } else {
@@ -320,7 +353,7 @@ class Addic7edCommand extends Command
     {
         $progress = new ProgressBar($output, $minutes);
 
-        for($i = 0; $i<$minutes; $i++ ){
+        for ($i = 0; $i < $minutes; $i++) {
             sleep(60);
             $progress->advance();
         }

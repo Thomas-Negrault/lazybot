@@ -18,6 +18,9 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
     - composer install
 
 - Install optionals packages:
+    - PushBullet:
+        - sudo apt-get install php5-curl
+       
     - [MKVToolNix]([https://www.bunkus.org/videotools/mkvtoolnix/downloads.html):
         - wget -q -O - https://www.bunkus.org/gpg-pub-moritzbunkus.txt | sudo apt-key add -
 	Add the appropriate lines to your /etc/apt/sources.list:
