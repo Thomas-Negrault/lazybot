@@ -82,7 +82,7 @@ class LazyBotMonitoringCommand extends Command
 
                 $process = new Process('./lazybot subtitle:addic7ed -i '.'"'.$newFile.'"');
                 $process->setTimeout(60*60*24); //24Hours
-                $process->run(
+                $process->start(
                     function ($type, $buffer) {
                         if ('err' === $type) {
                             echo ("\nERROR >$buffer");
