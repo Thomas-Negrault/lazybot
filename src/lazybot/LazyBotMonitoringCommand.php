@@ -48,7 +48,7 @@ class LazyBotMonitoringCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
@@ -58,7 +58,7 @@ class LazyBotMonitoringCommand extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      * @return null
      */
@@ -68,12 +68,12 @@ class LazyBotMonitoringCommand extends Command
         $output->writeln(sprintf("Starting monitoring folder <info>%s</info>", $this->folder));
 
         $allowedExtensions = array('mkv', 'mp4', 'avi'); //@todo move it to config
-        $fd               = inotify_init();
-        $watch_descriptor = inotify_add_watch($fd, $download_dir, IN_CREATE);
-        $fileInfo         = finfo_open(FILEINFO_MIME_TYPE);
+        $fd                = inotify_init();
+        $watch_descriptor  = inotify_add_watch($fd, $download_dir, IN_CREATE);
+        $fileInfo          = finfo_open(FILEINFO_MIME_TYPE);
         while (1) {
-            $events  = inotify_read($fd);
-            $newFile = realpath($this->folder.'/'.$events[0]['name']);
+            $events    = inotify_read($fd);
+            $newFile   = realpath($this->folder.'/'.$events[0]['name']);
             $extension = pathinfo($newFile)["extension"];
             if (in_array($extension, $allowedExtensions)) {
                 $output->writeln(
@@ -81,21 +81,19 @@ class LazyBotMonitoringCommand extends Command
                 );
 
                 $process = new Process('./lazybot subtitle:addic7ed -i '.'"'.$newFile.'"');
-                $process->setTimeout(60*60*24); //24Hours
+                $process->setTimeout(60 * 60 * 24); //24Hours
                 $process->start(
-                    function ($type, $buffer) {
+                    function ($type, $buffer) use ($output) {
                         if ('err' === $type) {
-                            echo ("\nERROR >$buffer");
+                            $output->writeln("\nERROR >$buffer");
                         } else {
-                            echo "\n>".$buffer;
+                            $output->writeln($buffer);
                         }
                     }
                 );
-
             }
         }
         inotify_rm_watch($fd, $watch_descriptor);
         fclose($fd);
     }
-
 }

@@ -7,6 +7,7 @@ namespace lazybot;
 
 use Goutte\Client;
 use GuzzleHttp\Stream\Stream;
+use PHPushbullet\PHPushbullet;
 use Symfony\Component\BrowserKit\Response;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Config\FileLocator;
@@ -15,9 +16,8 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\Process\Process;
+use Symfony\Component\DomCrawler\Link;
 use Symfony\Component\Yaml\Yaml;
 
 class Addic7edCommand extends Command
@@ -45,8 +45,11 @@ class Addic7edCommand extends Command
     /** @var bool */
     protected $finish = false;
 
-    /** @var bool */
+    /** @var bool $highestPercent */
     protected $highestPercent = 0;
+
+    /** @var  array $config */
+    protected $config;
 
     /**
      * Command configuration
@@ -80,7 +83,7 @@ class Addic7edCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $configLoader = new FileLocator(__DIR__.'/../../app/config');
-        $config       = Yaml::parse($configLoader->locate('parameters.yml'));
+        $this->config = Yaml::parse($configLoader->locate('parameters.yml'))["parameters"];
 
         try {
             $this->checkInput();
@@ -102,7 +105,13 @@ class Addic7edCommand extends Command
                 if ($this->finish == true) {
                     break;
                 } else {
-                    $output->writeln(sprintf("Progress: <error>%d</error>%%\nWaiting %d minute(s)...", $this->highestPercent, $this->frequency));
+                    $output->writeln(
+                        sprintf(
+                            "Progress: <error>%d</error>%%\nWaiting %d minute(s)...",
+                            $this->highestPercent,
+                            $this->frequency
+                        )
+                    );
                     $this->wait($this->frequency, $output);
                 }
             } while ($this->finish == false);
@@ -111,38 +120,27 @@ class Addic7edCommand extends Command
         }
 
         return null;
-
     }
 
+    /**
+     * @param $filename
+     */
     protected function notify($filename)
     {
         $configLoader     = new FileLocator(__DIR__.'/../../app/config');
         $pushBulletConfig = Yaml::parse($configLoader->locate('userConfig.yml'))["pushbullet"];
 
         if ($pushBulletConfig["enable"] == true) {
-
-            $pushContent = '{"type": "note", "title": "Subtitle: '.$this->inputFile.'", "body": "Path: '.$filename.'"}';
-            $curl        = curl_init();
-            curl_setopt($curl, CURLOPT_URL, $pushBulletConfig["url"]);
-            curl_setopt($curl, CURLOPT_USERPWD, $pushBulletConfig["key"]);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt(
-                $curl,
-                CURLOPT_HTTPHEADER,
-                array(
-                    'Content-Type: application/json',
-                    'Content-Length: '.strlen($pushContent)
-                )
-            );
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $pushContent);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_exec($curl);
-            curl_close($curl);
-
+            $pushbullet = new PHPushbullet($pushBulletConfig["key"]);
+            foreach ($pushbullet->devices() as $device) {
+                $pushbullet->device($device->nickname)->note("Subtitle: ".$this->inputFile, "Path: ".$filename);
+            }
         }
     }
 
+    /**
+     * @param OutputInterface $output
+     */
     protected function handleResults(OutputInterface $output)
     {
         $subtitles   = $this->results[$this->language];
@@ -163,7 +161,6 @@ class Addic7edCommand extends Command
                 $this->frequency = 5;
             }
         }
-
     }
 
     /**
@@ -171,8 +168,7 @@ class Addic7edCommand extends Command
      */
     protected function getDatas()
     {
-
-        $link        = "http://www.addic7ed.com/search.php?search=%s&Submit=Search";
+        $link        = $this->config["links"]["addic7ed"]["search"];
         $requestLink = sprintf($link, $this->inputFile);
 
         $this->client = new Client();
@@ -192,7 +188,6 @@ class Addic7edCommand extends Command
 
             return true;
         }
-
     }
 
     /**
@@ -200,18 +195,16 @@ class Addic7edCommand extends Command
      */
     protected function connect()
     {
-
-        $url     = "http://www.addic7ed.com/dologin.php";
+        $url     = $this->config["links"]["addic7ed"]["login"];
         $crawler = $this->client->request(
             'POST',
             $url,
             array('username' => 'lazybot', 'password' => 'azerty', 'remember' => true)
-        );
+        ); //@todo read from config
 
         if ($this->checkConnection($crawler) !== true) {
             throw new Exception('Connection failed (check username/password');
         };
-
     }
 
     /**
@@ -220,7 +213,7 @@ class Addic7edCommand extends Command
      * @param  Crawler $crawler
      * @return bool
      */
-    protected function checkConnection($crawler)
+    protected function checkConnection(Crawler $crawler)
     {
         $text = $crawler->filter('#hBar a.button')->first()->text();
         if ($text == "Signup") {
@@ -265,7 +258,6 @@ class Addic7edCommand extends Command
         }
 
         return $progress;
-
     }
 
     /**
@@ -278,16 +270,17 @@ class Addic7edCommand extends Command
     {
         return $language->nextAll()->nextAll()->filter('a.buttonDownload')->each(
             function ($link) {
+
                 return $link->link();
             }
         );
     }
 
     /**
-     * @param $link
+     * @param Link $link
      * @return string
      */
-    protected function download($link)
+    protected function download(Link $link)
     {
         /** @var Response $response */
         /** @var Stream $stream */
@@ -298,8 +291,6 @@ class Addic7edCommand extends Command
         $subtitle = $stream->getContents();
 
         return $subtitle;
-
-
     }
 
     /**
@@ -313,11 +304,9 @@ class Addic7edCommand extends Command
         $outputFile = $this->path.'/'.$fileName;
         if (file_put_contents($outputFile, $subtitle)) {
             $output->writeln(
-                sprintf('<info>File %s save with success</info>', $outputFile )
+                sprintf('<info>File %s save with success</info>', $outputFile)
             );
             $this->notify($outputFile);
-
-
             $this->finish = true;
         } else {
             throw new Exception('Error during file saving');
@@ -325,6 +314,9 @@ class Addic7edCommand extends Command
 
     }
 
+    /**
+     *
+     */
     protected function checkInput()
     {
         $realpath        = realpath($this->inputFile);
@@ -342,13 +334,10 @@ class Addic7edCommand extends Command
 
     }
 
-    protected function verifyFile()
-    {
-        if (realpath($this->inputFile) === false) {
-            throw new Exception("Fichier doesn't exist");
-        }
-    }
-
+    /**
+     * @param $minutes
+     * @param $output
+     */
     protected function wait($minutes, $output)
     {
         $progress = new ProgressBar($output, $minutes);
@@ -360,7 +349,11 @@ class Addic7edCommand extends Command
 
     }
 
-
+    /**
+     * @param int    $index
+     * @param string $countryCode
+     * @return mixed
+     */
     protected function generateOutputFilename($index = 0, $countryCode = '')
     {
         $regex  = '/^(.*)\.([a-zA-Z0-9]{0,4})$/';
@@ -371,11 +364,9 @@ class Addic7edCommand extends Command
         if ($countryCode != '') {
             $suffix[] = $countryCode;
         }
-        $suffix[] = 'srt';
-
+        $suffix[]    = 'srt';
         $replacement = '${1}'.'.'.implode('.', $suffix);
 
         return preg_replace($regex, $replacement, $this->inputFile);
-
     }
 }

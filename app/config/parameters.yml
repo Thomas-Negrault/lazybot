@@ -1,4 +1,8 @@
 parameters:
+    links:
+        addic7ed:
+            login: http://www.addic7ed.com/dologin.php
+            search: http://www.addic7ed.com/search.php?search=%s&Submit=Search
     countries:
          Albanian:
          Arabic:
