@@ -144,7 +144,7 @@ class Addic7edCommand extends Command
     protected function handleResults(OutputInterface $output)
     {
         $subtitles   = $this->results[$this->language];
-        $countryCode = 'fr'; //@todo read from config
+        $countryCode = isset($this->config["countries"][$this->language])?$this->config["countries"][$this->language]: '';
 
         foreach ($subtitles as $index => $subtitle) {
             $progress = $subtitle["progress"];
