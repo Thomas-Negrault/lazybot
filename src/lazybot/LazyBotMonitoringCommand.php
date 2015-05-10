@@ -44,7 +44,13 @@ class LazyBotMonitoringCommand extends Command
         $this->setDescription('Monitor a folder for changes and search subtitles on Addic7ed');
 
         $this->addArgument('folder', InputArgument::REQUIRED);
-        $this->addOption('language', 'l', InputOption::VALUE_REQUIRED, '', 'french');
+        $this->addOption(
+            'language',
+            'l',
+            InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+            '',
+            array('french')
+        );
     }
 
     /**
@@ -54,7 +60,7 @@ class LazyBotMonitoringCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
         $this->folder   = realpath($input->getArgument('folder'));
-        $this->language = ucfirst($input->getOption("language"));
+        $this->language = array_map('ucfirst', $input->getOption("language"));
     }
 
     /**
@@ -79,18 +85,21 @@ class LazyBotMonitoringCommand extends Command
                 $output->writeln(
                     sprintf("New file:  <info>%s</info>\nStarting searching for subtitle...", $events[0]['name'])
                 );
-
-                $process = new Process('./lazybot subtitle:addic7ed -i '.'"'.$newFile.'"');
-                $process->setTimeout(60 * 60 * 24); //24Hours
-                $process->start(
-                    function ($type, $buffer) use ($output) {
-                        if ('err' === $type) {
-                            $output->writeln("\nERROR >$buffer");
-                        } else {
-                            $output->writeln($buffer);
+                foreach ($this->language as $language) {
+                    $command = sprintf("./lazybot subtitle:addic7ed -i %s -l %s", escapeshellarg($newFile), $language);
+                    $process = new Process($command);
+                    $output->writeln($command);
+                    $process->setTimeout(60 * 60 * 24); //24Hours
+                    $process->start(
+                        function ($type, $buffer) use ($output) {
+                            if ('err' === $type) {
+                                $output->writeln("\nERROR >$buffer");
+                            } else {
+                                $output->writeln($buffer);
+                            }
                         }
-                    }
-                );
+                    );
+                }
             }
         }
         inotify_rm_watch($fd, $watch_descriptor);
