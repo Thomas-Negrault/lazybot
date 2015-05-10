@@ -33,7 +33,7 @@ class LazyBotMonitoringCommand extends Command
     protected $folder;
 
     /**
-     * @var string $language
+     * @var array $language
      */
     protected $language;
 
