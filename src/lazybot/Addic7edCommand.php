@@ -161,6 +161,8 @@ class Addic7edCommand extends Command
                 $this->frequency = 5;
             }
         }
+
+        $this->results = null;
     }
 
     /**
