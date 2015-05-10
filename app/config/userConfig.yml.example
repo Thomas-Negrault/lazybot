@@ -1,4 +1,3 @@
 pushbullet:
   enable: false
-  url: https://api.pushbullet.com/v2/pushes
   key: ...
