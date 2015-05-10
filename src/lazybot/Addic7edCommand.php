@@ -99,7 +99,7 @@ class Addic7edCommand extends Command
                 $output->writeln(
                     sprintf("\n<comment>%s</comment>\t Frequency: %d minute(s)", date("d-m-Y H:i"), $this->frequency)
                 );
-                if ($this->getDatas()) {
+                if ($this->getData()) {
                     $this->handleResults($output);
                 }
                 if ($this->finish == true) {
@@ -168,7 +168,7 @@ class Addic7edCommand extends Command
     /**
      * @return bool
      */
-    protected function getDatas()
+    protected function getData()
     {
         $link        = $this->config["links"]["addic7ed"]["search"];
         $requestLink = sprintf($link, $this->inputFile);
