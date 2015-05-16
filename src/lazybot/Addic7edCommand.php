@@ -37,7 +37,7 @@ class Addic7edCommand extends Command
     protected $results;
 
     /** @var int $frequency */
-    protected $frequency = 30;
+    protected $frequency = 15;
 
     /** @var Client $client */
     protected $client;
