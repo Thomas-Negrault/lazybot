@@ -145,8 +145,8 @@ class Addic7edCommand extends Command
     {
         $subtitles   = $this->results[$this->language];
         $countryCode = isset($this->config["countries"][$this->language])?$this->config["countries"][$this->language]: '';
-
-        foreach ($subtitles as $index => $subtitle) {
+        $index = 0;
+        foreach ($subtitles as $subtitle) {
             $progress = $subtitle["progress"];
             if ($progress > $this->highestPercent) {
                 $this->highestPercent = $progress;
@@ -155,6 +155,7 @@ class Addic7edCommand extends Command
             if ($progress == 100) {
                 $file           = $this->download($subtitle['links'][0]);
                 $outputFilename = $this->generateOutputFilename($index, $countryCode);
+                $index++;
 
                 $this->writeFile($file, $outputFilename, $output);
             } elseif ($progress > 85) {
