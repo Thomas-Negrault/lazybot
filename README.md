@@ -16,6 +16,7 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
     - cd lazybot
     - composer update
     - composer install
+    - Copy app/config/userConfig.yml.example to app/config/userConfig.yml and fill it with your informations
 
 - Install optionals packages:
     - PushBullet:
