@@ -51,6 +51,9 @@ class Addic7edCommand extends Command
     /** @var  array $config */
     protected $config;
 
+    /** @var  array $userConfig */
+    protected $userConfig;
+
     /**
      * Command configuration
      */
@@ -84,6 +87,7 @@ class Addic7edCommand extends Command
     {
         $configLoader = new FileLocator(__DIR__.'/../../app/config');
         $this->config = Yaml::parse($configLoader->locate('parameters.yml'))["parameters"];
+        $this->userConfig = Yaml::parse($configLoader->locate('userConfig.yml'));
 
         try {
             $this->checkInput();
@@ -127,8 +131,7 @@ class Addic7edCommand extends Command
      */
     protected function notify($filename)
     {
-        $configLoader     = new FileLocator(__DIR__.'/../../app/config');
-        $pushBulletConfig = Yaml::parse($configLoader->locate('userConfig.yml'))["pushbullet"];
+        $pushBulletConfig = $this->userConfig["pushbullet"];
 
         if ($pushBulletConfig["enable"] == true) {
             $pushbullet = new PHPushbullet($pushBulletConfig["key"]);
@@ -199,10 +202,11 @@ class Addic7edCommand extends Command
     protected function connect()
     {
         $url     = $this->config["links"]["addic7ed"]["login"];
+        $credentials = $this->userConfig["credentials"];
         $crawler = $this->client->request(
             'POST',
             $url,
-            array('username' => 'lazybot', 'password' => 'azerty', 'remember' => true)
+            $credentials
         ); //@todo read from config
 
         if ($this->checkConnection($crawler) !== true) {

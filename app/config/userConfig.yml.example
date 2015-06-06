@@ -1,3 +1,7 @@
 pushbullet:
   enable: false
   key: ...
+credentials:
+    username: YourAddic7edUsurname
+    password: YourAddic7edPassword
+    remember: true
