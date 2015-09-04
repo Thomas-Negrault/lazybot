@@ -80,7 +80,8 @@ class LazyBotMonitoringCommand extends Command
         while (1) {
             $events    = inotify_read($fd);
             $newFile   = realpath($this->folder.'/'.$events[0]['name']);
-            $extension = pathinfo($newFile)["extension"];
+            $pathInfo = pathinfo($newFile);
+            $extension = is_array($pathInfo) && isset($pathInfo["extension"]) ? ["extension"] : '';
             if (in_array($extension, $allowedExtensions)) {
                 $output->writeln(
                     sprintf("New file:  <info>%s</info>\nStarting searching for subtitle...", $events[0]['name'])
