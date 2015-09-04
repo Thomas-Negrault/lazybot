@@ -10,48 +10,35 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
     - curl -sS https://getcomposer.org/installer | php
     - sudo mv composer.phar /usr/local/bin/composer
 - Install requirements
-    - sudo apt-get update && sudo apt-get install php5-dev php-pear libcurl3-openssl-dev
+    - PHP ([Ubuntu lamp page](http://doc.ubuntu-fr.org/lamp))
+    - sudo apt-get update && sudo apt-get install  php-pear
     - sudo pecl install inotify
     - Add the extension to your *CLI* php.ini `extension=inotify.so;` (/etc/php5/cli/php.ini)
     - cd lazybot
     - composer update
-    - composer install
-    - Copy app/config/userConfig.yml.example to app/config/userConfig.yml and fill it with your informations
+    - Copy `app/config/userConfig.yml.example` to `app/config/userConfig.yml` and fill it with your informations
 
 - Install optionals packages:
     - PushBullet:
         - sudo apt-get install php5-curl
-       
-    - [MKVToolNix]([https://www.bunkus.org/videotools/mkvtoolnix/downloads.html):
-        - wget -q -O - https://www.bunkus.org/gpg-pub-moritzbunkus.txt | sudo apt-key add -
-	Add the appropriate lines to your /etc/apt/sources.list:
-		- Ubuntu
-			- 15.04 "Vivid Vervet"
-				  - deb http://www.bunkus.org/ubuntu/vivid/ ./
-				  - deb-src http://www.bunkus.org/ubuntu/vivid/ ./
-			- 14.10 "Utopic Unicorn"
-				- deb http://www.bunkus.org/ubuntu/utopic/ ./
-				- deb-src http://www.bunkus.org/ubuntu/utopic/ ./
-			- 14.04 "Trusty Tahr"
-				- deb http://www.bunkus.org/ubuntu/trusty/ ./
-				- deb-src http://www.bunkus.org/ubuntu/trusty/ ./
-		- Debian
-			- Debian 7 wheezy
-				        - deb http://www.bunkus.org/debian/wheezy/ ./
-				        - deb-src http://www.bunkus.org/debian/wheezy/ ./
-			- Debian 8 (aka »jessie«)
-				        - deb http://www.bunkus.org/debian/jessie/ ./
-				        - deb-src http://www.bunkus.org/debian/jessie/ ./
-        - sudo apt-get update && sudo apt-get install mkvtoolnix
-
-
+        - Create a PushBullet account and get your Access Token on [your account page](https://www.pushbullet.com/#settings/account)
+        - Add your Access Token in `app/config/userConfig.yml`
 
 ##Utilisation
 
 ``` 
 ./lazybot subtitle:addic7ed -i Show.S01.E01.mkv -p /path/to/output/subtitle
 ./lazybot monitor /home/PATH/TO/DOWNLOAD/DIRECTORY/
+```
 
+In zsh use:
+```
+ alias lazybot="/PATH/TO/PROJECT/lazybot subtitle:addic7ed -i"
+```
+and after that:
+
+```
+lazybot Show.S01.E01.mkv
 ```
 
 ##Tests:
