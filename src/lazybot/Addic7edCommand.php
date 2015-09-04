@@ -136,9 +136,7 @@ class Addic7edCommand extends Command
 
         if ($pushBulletConfig["enable"] == true) {
             $pushbullet = new PHPushbullet($pushBulletConfig["key"]);
-            foreach ($pushbullet->devices() as $device) {
-                $pushbullet->device($device->nickname)->note("Subtitle: ".$this->inputFile, "Path: ".$filename);
-            }
+            $pushbullet->all()->note("Subtitle: ".$this->inputFile, "Path: ".$filename);
         }
     }
 
