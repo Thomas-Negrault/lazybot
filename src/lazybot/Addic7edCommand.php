@@ -59,6 +59,7 @@ class Addic7edCommand extends Command
      */
     protected function configure()
     {
+        date_default_timezone_set("Europe/Paris");
         $this->setName('subtitle:addic7ed');
         $this->setDescription('check subtitles on Addic7ed');
 
