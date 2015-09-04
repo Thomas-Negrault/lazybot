@@ -8,7 +8,6 @@ class Addic7edCommandeTest extends \PHPUnit_Framework_TestCase
 {
     public function testExecute()
     {
-        // mockez le Kernel ou créez en un selon vos besoins
         $application = new Application('LazyBot', '0.0.1');
         $application->add(new Addic7edCommand());
 

@@ -1,7 +1,13 @@
 #LazyBot
 
-Lazybot is a tool to automate subtitle downloading for TV Shows
+Lazybot is a tool to automate subtitles downloading for TV Shows.
 
+##How it works
+
+Lazybot is a 2 part application. The first one takes a video file as argument, eventually the wanted language and it will check on [Addic7ed](http://www.addic7ed.com) if the subtitle is available.
+Depending on the progress of the translation, lazybot will regularly check and download the subtitle when it's available.
+
+The second part is an application that monitor a folder, when a new file is added is the folder, the first script will be launched in order to automatically download subtitles for your TV shows.
 
 ##Installation
 - Clone the repository
@@ -27,8 +33,11 @@ Lazybot is a tool to automate subtitle downloading for TV Shows
 ##Utilisation
 
 ``` 
+./lazybot subtitle:addic7ed -i Show.S01.E01.mkv 
+./lazybot subtitle:addic7ed -i Show.S01.E01.mkv -l english
 ./lazybot subtitle:addic7ed -i Show.S01.E01.mkv -p /path/to/output/subtitle
-./lazybot monitor /home/PATH/TO/DOWNLOAD/DIRECTORY/
+
+./lazybot monitor /home/PATH/TO/DOWNLOAD/DIRECTORY/ -l french -l english
 ```
 
 In zsh use:
@@ -41,8 +50,8 @@ and after that:
 lazybot Show.S01.E01.mkv
 ```
 
-##Tests:
-
+##Disclaimer:
 ```
-./vendor/bin/phpunit
+I am not in any way affiliated with Addic7ed. Please continue to visit the website because that's how they are remunerated.
+I am not responsible and I do not encourage the use of this tool for any kind of piracy.
 ```
