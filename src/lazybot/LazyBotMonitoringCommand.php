@@ -70,40 +70,50 @@ class LazyBotMonitoringCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $download_dir = $this->folder;
-        $output->writeln(sprintf("Starting monitoring folder <info>%s</info>", $this->folder));
+        if (extension_loaded("inotify") === false) {
+            $output->writeln("<error>Extension inotify missing</error>");
+            $output->writeln("Check <comment>https://secure.php.net/manual/fr/book.inotify.php</comment> for more informations");
+        } else {
 
-        $allowedExtensions = array('mkv', 'mp4', 'avi'); //@todo move it to config
-        $fd                = inotify_init();
-        $watch_descriptor  = inotify_add_watch($fd, $download_dir, IN_CREATE);
-        $fileInfo          = finfo_open(FILEINFO_MIME_TYPE);
-        while (1) {
-            $events    = inotify_read($fd);
-            $newFile   = realpath($this->folder.'/'.$events[0]['name']);
-            $pathInfo = pathinfo($newFile);
-            $extension = is_array($pathInfo) && isset($pathInfo["extension"]) ? $pathInfo["extension"] : '';
-            if (in_array($extension, $allowedExtensions)) {
-                $output->writeln(
-                    sprintf("New file:  <info>%s</info>\nStarting searching for subtitle...", $events[0]['name'])
-                );
-                foreach ($this->language as $language) {
-                    $command = sprintf("./lazybot subtitle:addic7ed -i %s -l %s", escapeshellarg($newFile), $language);
-                    $process = new Process($command);
-                    $output->writeln($command);
-                    $process->setTimeout(60 * 60 * 24); //24Hours
-                    $process->start(
-                        function ($type, $buffer) use ($output) {
-                            if ('err' === $type) {
-                                $output->writeln("\nERROR >$buffer");
-                            } else {
-                                $output->writeln($buffer);
-                            }
-                        }
+            $download_dir = $this->folder;
+            $output->writeln(sprintf("Starting monitoring folder <info>%s</info>", $this->folder));
+
+            $allowedExtensions = array('mkv', 'mp4', 'avi'); //@todo move it to config
+            $fd = inotify_init();
+            $watch_descriptor = inotify_add_watch($fd, $download_dir, IN_CREATE);
+            $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+            while (1) {
+                $events = inotify_read($fd);
+                $newFile = realpath($this->folder.'/'.$events[0]['name']);
+                $pathInfo = pathinfo($newFile);
+                $extension = is_array($pathInfo) && isset($pathInfo["extension"]) ? $pathInfo["extension"] : '';
+                if (in_array($extension, $allowedExtensions)) {
+                    $output->writeln(
+                        sprintf("New file:  <info>%s</info>\nStarting searching for subtitle...", $events[0]['name'])
                     );
+                    foreach ($this->language as $language) {
+                        $command = sprintf(
+                            "./lazybot subtitle:addic7ed -i %s -l %s",
+                            escapeshellarg($newFile),
+                            $language
+                        );
+                        $process = new Process($command);
+                        $output->writeln($command);
+                        $process->setTimeout(60 * 60 * 24); //24Hours
+                        $process->start(
+                            function ($type, $buffer) use ($output) {
+                                if ('err' === $type) {
+                                    $output->writeln("\nERROR >$buffer");
+                                } else {
+                                    $output->writeln($buffer);
+                                }
+                            }
+                        );
+                    }
                 }
             }
+            inotify_rm_watch($fd, $watch_descriptor);
+            fclose($fd);
         }
-        inotify_rm_watch($fd, $watch_descriptor);
-        fclose($fd);
     }
 }
