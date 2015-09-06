@@ -201,15 +201,15 @@ class Addic7edCommand extends Command
     protected function connect()
     {
         $url     = $this->config["links"]["addic7ed"]["login"];
-        $credentials = $this->userConfig["credentials"];
+        $credentials = isset($this->userConfig["credentials"]) ? $this->userConfig["credentials"] : array();
         $crawler = $this->client->request(
             'POST',
             $url,
             $credentials
-        ); //@todo read from config
+        );
 
         if ($this->checkConnection($crawler) !== true) {
-            throw new Exception('Connection failed (check username/password');
+            throw new Exception('Connection failed (check username/password in app/config/userConfig.yml');
         };
     }
 
