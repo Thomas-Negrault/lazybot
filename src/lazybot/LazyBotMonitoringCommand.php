@@ -37,6 +37,12 @@ class LazyBotMonitoringCommand extends Command
      */
     protected $language;
 
+    /** @var  array $config */
+    protected $config;
+
+    /** @var  array $userConfig */
+    protected $userConfig;
+
 
     protected function configure()
     {
@@ -61,6 +67,9 @@ class LazyBotMonitoringCommand extends Command
     {
         $this->folder   = realpath($input->getArgument('folder'));
         $this->language = array_map('ucfirst', $input->getOption("language"));
+        $configLoader = new FileLocator(__DIR__.'/../../app/config');
+        $this->config = Yaml::parse($configLoader->locate('parameters.yml'))["parameters"];
+        $this->userConfig = Yaml::parse($configLoader->locate('userConfig.yml'));
     }
 
     /**
@@ -78,7 +87,7 @@ class LazyBotMonitoringCommand extends Command
             $download_dir = $this->folder;
             $output->writeln(sprintf("Starting monitoring folder <info>%s</info>", $this->folder));
 
-            $allowedExtensions = array('mkv', 'mp4', 'avi'); //@todo move it to config
+            $allowedExtensions = isset($this->userConfig["extensions"]) ? $this->userConfig["extensions"]: $this->config["defaultExtensions"];
             $fd = inotify_init();
             $watch_descriptor = inotify_add_watch($fd, $download_dir, IN_CREATE);
             $fileInfo = finfo_open(FILEINFO_MIME_TYPE);

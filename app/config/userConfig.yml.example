@@ -5,3 +5,7 @@ credentials:
     username: YourAddic7edUsurname
     password: YourAddic7edPassword
     remember: true
+extensions:
+    - mkv
+    - mp4
+    - avi

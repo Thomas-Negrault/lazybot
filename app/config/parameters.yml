@@ -59,3 +59,7 @@ parameters:
          Turkish:
          Ukrainian:
          Vietnamese:
+    defaultExtensions:
+        - mkv
+        - mp4
+        - avi
