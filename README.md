@@ -30,7 +30,7 @@ The second part is an application that monitor a folder, when a new file is adde
         - Create a PushBullet account and get your Access Token on [your account page](https://www.pushbullet.com/#settings/account)
         - Add your Access Token in `app/config/userConfig.yml`
 
-##Utilisation
+##Use
 
 ``` 
 ./lazybot subtitle:addic7ed -i Show.S01.E01.mkv 
