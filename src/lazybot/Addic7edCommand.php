@@ -179,6 +179,7 @@ class Addic7edCommand extends Command
         $this->client = new Client();
         $this->client->followRedirects(true);
 
+        $this->client->setServerParameter('HTTP_USER_AGENT', 'Mozilla/5.0 AppleWebKit');
         $this->connect();
         /** @var crawler $crawler */
         $crawler = $this->client->request('GET', $requestLink);
