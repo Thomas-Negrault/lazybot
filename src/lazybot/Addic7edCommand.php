@@ -185,13 +185,17 @@ class Addic7edCommand extends Command
         if ($this->client->getHistory()->current()->getUri() == $requestLink) {
             return false;
         } else {
-            $crawler->filter('div#container95m td.language')->each(
-                function ($language) {
-                    $this->parseLanguage($language);
-                }
-            );
+            if ($crawler->filter('div#container95m td.language')->count() > 0) {
+                $crawler->filter('div#container95m td.language')->each(
+                    function ($language) {
+                        $this->parseLanguage($language);
+                    }
+                );
 
-            return true;
+                return true;
+            }
+
+            return false;
         }
     }
 
